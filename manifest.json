@@ -1,0 +1,8 @@
+{
+  "name": "Top Ten",
+  "short_name": "TopTen",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f5b6b",
+  "theme_color": "#0f5b6b"
+}
