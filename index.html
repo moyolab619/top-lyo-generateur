@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Top Ten</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f5b6b">
+<style>
+body{font-family:system-ui;background:#0f5b6b;color:#fff;margin:0;padding:16px}
+button,select,input{padding:12px;border-radius:12px;border:none;font-size:1rem}
+button{background:#ffcc00;font-weight:900}
+.card{background:#0b4e5c;border-radius:16px;padding:16px;margin-top:12px}
+.bubble{background:#fff;color:#111;border-radius:12px;padding:16px;min-height:90px}
+.small{font-size:.85rem;opacity:.8}
+.min{color:#1aa35c}
+.max{color:#e23d3d}
+</style>
+</head>
+
+<body>
+<h1>🎲 Top Ten</h1>
+
+<label>👥 Nombre de joueurs</label>
+<select id="players">
+<option>4</option><option>5</option><option>6</option>
+<option>7</option><option>8</option><option>9</option>
+</select>
+
+<label>🔥 Niveau trash</label>
+<input type="range" id="trash" min="0" max="3" value="1">
+
+<label>🎭 Mode Cap’ten</label>
+<select id="captain">
+<option value="off">Désactivé</option>
+<option value="on">Activé</option>
+</select>
+
+<button onclick="newCard()">🎴 Nouvelle carte</button>
+
+<div class="card">
+  <div class="bubble" id="text">Clique sur « Nouvelle carte »</div>
+  <div id="scale"></div>
+</div>
+
+<script>
+const prompts=[
+"Vous improvisez une activité absurde lors d’une soirée.",
+"Vous racontez une anecdote gênante.",
+"Vous inventez une règle sociale obligatoire.",
+"Vous décrivez une idée qui semblait bonne sur le moment.",
+"Vous choisissez une excuse pour éviter un engagement."
+];
+const scales=[
+["du moins utile","au plus utile"],
+["du moins gênant","au plus gênant"],
+["du pire","au meilleur"]
+];
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function newCard(){
+ const p=document.getElementById("players").value;
+ const t=document.getElementById("trash").value;
+ const c=document.getElementById("captain").value;
+ let text=pick(prompts);
+ if(p>=7) text+=" — soyez précis.";
+ if(p==9) text+=" (très distinct)";
+ if(t>=2) text+=" (sans filtre)";
+ const s=pick(scales);
+ document.getElementById("text").innerText=text;
+ document.getElementById("scale").innerHTML=
+  c==="on"?"<em>Échelle cachée</em>":
+  `Classez <span class="min">${s[0]}</span> → <span class="max">${s[1]}</span>`;
+}
+</script>
+
+<script>
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("sw.js");
+}
+</script>
+</body>
+</html>
