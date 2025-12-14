@@ -1,82 +1,172 @@
-<!DOCTYPE html>
-<html lang="fr">
+<!DOCTYPE html><html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Top Ten</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f5b6b">
-<style>
-body{font-family:system-ui;background:#0f5b6b;color:#fff;margin:0;padding:16px}
-button,select,input{padding:12px;border-radius:12px;border:none;font-size:1rem}
-button{background:#ffcc00;font-weight:900}
-.card{background:#0b4e5c;border-radius:16px;padding:16px;margin-top:12px}
-.bubble{background:#fff;color:#111;border-radius:12px;padding:16px;min-height:90px}
-.small{font-size:.85rem;opacity:.8}
-.min{color:#1aa35c}
-.max{color:#e23d3d}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Top Ten – Générateur de cartes</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu; background:#0f5b6b; color:#fff; margin:0; padding:16px}
+    .app{max-width:760px; margin:0 auto}
+    h1{margin-top:0}
+    .card{background:#0b4e5c; border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .bubble{background:#fff; color:#111; border-radius:14px; padding:16px; font-size:1.05rem; line-height:1.4; min-height:90px}
+    .scale{margin-top:10px; font-weight:800}
+    .min{color:#1aa35c} .max{color:#e23d3d}
+    .controls{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0}
+    button, select, input[type=range]{border-radius:12px; border:none; padding:12px; font-size:1rem}
+    button{background:#ffcc00; color:#111; font-weight:900}
+    select{background:#e8f6f9}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+    .small{font-size:.85rem; opacity:.85}
+    .footer{opacity:.8; font-size:.8rem; margin-top:10px}
+    .fav{background:#fff; color:#111; border-radius:12px; padding:10px; margin-top:8px}
+  </style>
 </head>
-
 <body>
-<h1>🎲 Top Ten</h1>
+<div class="app">
+  <h1>🎲 Top Ten – Générateur de cartes</h1>  <div class="controls">
+    <select id="mode">
+      <option value="mix">Mix (tout)</option>
+      <option value="soft">Tout public / soft</option>
+      <option value="adult">Adultes 18+</option>
+      <option value="pop">Pop culture</option>
+      <option value="creative">Créatif / absurde</option>
+      <option value="work">Travail / société</option>
+    </select>
+    <button onclick="newCard()">🎴 Nouvelle carte</button>
+  </div>  <div class="row">
+    <div>
+      <label>🔥 Niveau trash</label>
+      <input type="range" id="trash" min="0" max="3" value="1" />
+      <div class="small">0 = soft • 3 = très adulte</div>
+    </div>
+    <div>
+      <label>🎭 Mode Cap’ten</label>
+      <select id="captain">
+        <option value="off">Désactivé</option>
+        <option value="on">Activé (cache l’échelle)</option>
+      </select>
+    </div>
+  </div>  <div class="row" style="margin-top:8px">
+    <div>
+      <label>👥 Nombre de joueurs</label>
+      <select id="players">
+        <option value="4">4 joueurs</option>
+        <option value="5">5 joueurs</option>
+        <option value="6">6 joueurs</option>
+        <option value="7">7 joueurs</option>
+        <option value="8">8 joueurs</option>
+        <option value="9">9 joueurs</option>
+      </select>
+      <div class="small">Plus il y a de joueurs, plus la carte est exigeante</div>
+    </div>
+  </div>
+    </div>
+    <div>
+      <label>🎭 Mode Cap’ten</label>
+      <select id="captain">
+        <option value="off">Désactivé</option>
+        <option value="on">Activé (cache l’échelle)</option>
+      </select>
+    </div>
+  </div>  <div class="card">
+    <div class="bubble" id="text">Clique sur « Nouvelle carte »</div>
+    <div class="scale" id="scale"></div>
+  </div><button style="margin-top:8px" onclick="saveFav()">⭐ Ajouter aux favoris</button>
 
-<label>👥 Nombre de joueurs</label>
-<select id="players">
-<option>4</option><option>5</option><option>6</option>
-<option>7</option><option>8</option><option>9</option>
-</select>
+  <div id="favs"></div>  <div class="footer">Fonctionne hors-ligne • Ajoutable à l’écran d’accueil • Cartes originales inspirées de Top Ten</div>
+</div><script>
+// Génération originale inspirée du jeu Top Ten (sans cartes officielles)
 
-<label>🔥 Niveau trash</label>
-<input type="range" id="trash" min="0" max="3" value="1">
+const scales=[['du moins utile','au plus utile'],['de la moins crédible','à la plus crédible'],['du moins gênant','au plus gênant'],['du moins efficace','au plus efficace'],['du pire','au meilleur'],['de la moins intense','à la plus intense'],['du moins probable','au plus probable']];
 
-<label>🎭 Mode Cap’ten</label>
-<select id="captain">
-<option value="off">Désactivé</option>
-<option value="on">Activé</option>
-</select>
+const prompts={
+ mix:[
+  'Vous improvisez une activité absurde lors d’une soirée.',
+  'Vous racontez une anecdote devant des inconnus.',
+  'Vous inventez une règle sociale obligatoire une journée.',
+  'Vous décrivez une idée qui semblait bonne sur le moment.'
+ ],
+ soft:[
+  'Vous choisissez un objet à emporter en voyage.',
+  'Vous décrivez une façon de passer un dimanche.',
+  'Vous imaginez un cadeau à offrir.'
+ ],
+ adult:[
+  'Vous décrivez un rendez-vous raté.',
+  'Vous avouez un message envoyé trop tard.',
+  'Vous racontez une décision regrettable.'
+ ],
+ pop:[
+  'Vous choisissez un personnage fictif pour vous aider.',
+  'Vous vivez dans un univers de fiction.',
+  'Vous binge-watchez une série en une nuit.'
+ ],
+ creative:[
+  'Vous inventez une machine inutile.',
+  'Vous créez un slogan absurde.',
+  'Vous imaginez un animal comme colocataire.'
+ ],
+ work:[
+  'Vous décrivez une réunion inutile.',
+  'Vous citez une phrase passive-agressive.',
+  'Vous évoquez une raison de démissionner.'
+ ]
+};
 
-<button onclick="newCard()">🎴 Nouvelle carte</button>
+let lastCard=null;
 
-<div class="card">
-  <div class="bubble" id="text">Clique sur « Nouvelle carte »</div>
-  <div id="scale"></div>
-</div>
-
-<script>
-const prompts=[
-"Vous improvisez une activité absurde lors d’une soirée.",
-"Vous racontez une anecdote gênante.",
-"Vous inventez une règle sociale obligatoire.",
-"Vous décrivez une idée qui semblait bonne sur le moment.",
-"Vous choisissez une excuse pour éviter un engagement."
-];
-const scales=[
-["du moins utile","au plus utile"],
-["du moins gênant","au plus gênant"],
-["du pire","au meilleur"]
-];
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
-function newCard(){
- const p=document.getElementById("players").value;
- const t=document.getElementById("trash").value;
- const c=document.getElementById("captain").value;
- let text=pick(prompts);
- if(p>=7) text+=" — soyez précis.";
- if(p==9) text+=" (très distinct)";
- if(t>=2) text+=" (sans filtre)";
- const s=pick(scales);
- document.getElementById("text").innerText=text;
- document.getElementById("scale").innerHTML=
-  c==="on"?"<em>Échelle cachée</em>":
-  `Classez <span class="min">${s[0]}</span> → <span class="max">${s[1]}</span>`;
-}
-</script>
 
-<script>
-if("serviceWorker" in navigator){
- navigator.serviceWorker.register("sw.js");
+function newCard(){
+ const mode=document.getElementById('mode').value;
+ const trash=parseInt(document.getElementById('trash').value);
+ const players=parseInt(document.getElementById('players').value);
+
+ let base=pick(prompts[mode]||prompts.mix);
+
+ // Influence du nombre de joueurs sur la difficulté
+ if(players>=7){ base+=' — soyez précis et nuancés.'; }
+ if(players===9){ base+=' (toutes les réponses doivent être très distinctes)'; }
+
+ // Influence du niveau trash
+ if(trash>=2) base+=' (version sans filtre)';
+ if(trash===3) base+=' ⚠️';
+
+ const [min,max]=pick(scales);
+ lastCard={text:base,scale:`${min} → ${max}`, players};
+
+ document.getElementById('text').innerText=base;
+ const cap=document.getElementById('captain').value;
+ document.getElementById('scale').innerHTML=
+  cap==='on'
+   ? '(Échelle cachée au Cap’ten)'
+   : `Classez <span class='min'>${min}</span> → <span class='max'>${max}</span> <span class='small'>(à ${players} joueurs)</span>`;
+} → ${max}`};
+ document.getElementById('text').innerText=base;
+ const cap=document.getElementById('captain').value;
+ document.getElementById('scale').innerHTML=cap==='on'?'(Échelle cachée au Cap’ten)':`Classez <span class='min'>${min}</span> → <span class='max'>${max}</span>`;
 }
-</script>
-</body>
+
+function saveFav(){
+ if(!lastCard) return;
+ const favs=JSON.parse(localStorage.getItem('topten_favs')||'[]');
+ favs.push(lastCard);
+ localStorage.setItem('topten_favs',JSON.stringify(favs));
+ renderFavs();
+}
+
+function renderFavs(){
+ const favs=JSON.parse(localStorage.getItem('topten_favs')||'[]');
+ const box=document.getElementById('favs');
+ box.innerHTML='';
+ favs.slice(-5).forEach(f=>{
+  const d=document.createElement('div');
+  d.className='fav';
+  d.innerText=`${f.text} (${f.scale})`;
+  box.appendChild(d);
+ });
+}
+
+renderFavs();
+</script></body>
 </html>
